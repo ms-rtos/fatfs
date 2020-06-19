@@ -33,7 +33,7 @@ DSTATUS disk_initialize (
     ms_io_device_t *dev = (ms_io_device_t *)pdrv;
     DSTATUS dstatus;
 
-    if (dev->drv->ops->ioctl(dev->ctx, MS_NULL, MS_IO_BLKDEV_CMD_INIT, MS_NULL) < 0) {
+    if (dev->drv->ops->ioctl(dev->ctx, MS_NULL, MS_BLKDEV_CMD_INIT, MS_NULL) < 0) {
         dstatus = STA_NOINIT;
     } else {
         dstatus = 0U;
@@ -54,24 +54,24 @@ DSTATUS disk_status (
     DSTATUS dstatus;
     ms_uint32_t ms_status;
 
-    if (dev->drv->ops->ioctl(dev->ctx, MS_NULL, MS_IO_BLKDEV_CMD_STATUS, &ms_status) < 0) {
+    if (dev->drv->ops->ioctl(dev->ctx, MS_NULL, MS_BLKDEV_CMD_GET_STATUS, &ms_status) < 0) {
         dstatus = STA_NOINIT;
 
     } else {
         switch (ms_status) {
-        case MS_IO_BLKDEV_STA_OK:
+        case MS_BLKDEV_STATUS_OK:
             dstatus = 0U;
             break;
 
-        case MS_IO_BLKDEV_STA_NOINIT:
+        case MS_BLKDEV_STATUS_NOINIT:
             dstatus = STA_NOINIT;
             break;
 
-        case MS_IO_BLKDEV_STA_NODISK:
+        case MS_BLKDEV_STATUS_NODISK:
             dstatus = STA_NODISK;
             break;
 
-        case MS_IO_BLKDEV_STA_PROTECT:
+        case MS_BLKDEV_STATUS_PROTECT:
             dstatus = STA_PROTECT;
             break;
 
@@ -142,27 +142,30 @@ DRESULT disk_ioctl (
 {
     ms_io_device_t *dev = (ms_io_device_t *)pdrv;
     DRESULT dresult = RES_OK;
+    ms_ptr_t ms_buf = buff;
+    ms_uint32_t ms_value;
     int ms_cmd;
 
     switch (cmd) {
     case CTRL_SYNC:
-        ms_cmd = MS_IO_BLKDEV_CMD_SYNC;
+        ms_cmd = MS_BLKDEV_CMD_SYNC;
         break;
 
     case GET_SECTOR_COUNT:
-        ms_cmd = MS_IO_BLKDEV_CMD_SECT_NR;
+        ms_cmd = MS_BLKDEV_CMD_GET_SECT_NR;
         break;
 
     case GET_SECTOR_SIZE:
-        ms_cmd = MS_IO_BLKDEV_CMD_SECT_SZ;
+        ms_cmd = MS_BLKDEV_CMD_GET_SECT_SZ;
+        ms_buf = &ms_value;
         break;
 
     case GET_BLOCK_SIZE:
-        ms_cmd = MS_IO_BLKDEV_CMD_BLK_SZ;
+        ms_cmd = MS_BLKDEV_CMD_GET_BLK_SZ;
         break;
 
     case CTRL_TRIM:
-        ms_cmd = MS_IO_BLKDEV_CMD_TRIM;
+        ms_cmd = MS_BLKDEV_CMD_TRIM;
         break;
 
     default:
@@ -171,8 +174,12 @@ DRESULT disk_ioctl (
     }
 
     if (dresult == RES_OK) {
-        if (dev->drv->ops->ioctl(dev->ctx, MS_NULL, ms_cmd, buff) < 0) {
+        if (dev->drv->ops->ioctl(dev->ctx, MS_NULL, ms_cmd, ms_buf) < 0) {
             dresult = RES_ERROR;
+        } else {
+            if (ms_cmd == MS_BLKDEV_CMD_GET_SECT_SZ) {
+                *(ms_uint16_t *)buff = ms_value;
+            }
         }
     }
 
