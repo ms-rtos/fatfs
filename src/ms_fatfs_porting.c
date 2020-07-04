@@ -196,7 +196,7 @@ void* ff_memalloc ( /* Returns pointer to the allocated memory block (null if no
     UINT msize      /* Number of bytes to allocate */
 )
 {
-    return ms_kmalloc(msize);   /* Allocate a new memory block with POSIX API */
+    return ms_kmalloc_align(msize, MS_ARCH_CACHE_LINE_SIZE);   /* Allocate a new memory block with POSIX API */
 }
 
 /*------------------------------------------------------------------------*/
