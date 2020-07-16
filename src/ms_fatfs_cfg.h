@@ -6,7 +6,7 @@
  *
  * File: ms_fatfs_cfg.h FATFS configuration.
  *
- * Author: Jiao.jinxing <jiaojixing@acoinfo.com>
+ * Author: Jiao.jinxing <jiaojinxing@acoinfo.com>
  *
  */
 

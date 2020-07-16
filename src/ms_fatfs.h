@@ -6,7 +6,7 @@
  *
  * File: ms_fatfs.h FATFS implement.
  *
- * Author: Jiao.jinxing <jiaojixing@acoinfo.com>
+ * Author: Jiao.jinxing <jiaojinxing@acoinfo.com>
  *
  */
 
