@@ -215,14 +215,14 @@ static int __ms_fatfs_mkfs(ms_io_mnt_t *mnt, ms_const_ptr_t param)
     return ret;
 }
 
-static int __ms_fatfs_unmount(ms_io_mnt_t *mnt, ms_const_ptr_t param, ms_bool_t force)
+static int __ms_fatfs_unmount(ms_io_mnt_t *mnt, ms_const_ptr_t param)
 {
     FATFS *fatfs = mnt->ctx;
     FRESULT fresult;
     int ret;
 
     fresult = f_unmount(fatfs);
-    if (fresult != FR_OK) {
+    if ((fresult != FR_OK) && !mnt->umount_req) {
         ms_thread_set_errno(__ms_fatfs_result_to_errno(fresult));
         ret = -1;
     } else {
@@ -277,7 +277,7 @@ static int __ms_fatfs_close(ms_io_mnt_t *mnt, ms_io_file_t *file)
     int ret;
 
     fresult = f_close(fatfs_file);
-    if (fresult != FR_OK) {
+    if ((fresult != FR_OK) && !mnt->umount_req) {
         ms_thread_set_errno(__ms_fatfs_result_to_errno(fresult));
         ret = -1;
     } else {
@@ -288,17 +288,6 @@ static int __ms_fatfs_close(ms_io_mnt_t *mnt, ms_io_file_t *file)
     }
 
     return ret;
-}
-
-static int __ms_fatfs_destroy(ms_io_mnt_t *mnt, ms_io_file_t *file)
-{
-    FIL *fatfs_file = file->ctx;
-
-    (void)ms_kfree(fatfs_file->buf);
-    (void)ms_kfree(fatfs_file);
-    file->ctx = MS_NULL;
-
-    return 0;
 }
 
 static ms_ssize_t __ms_fatfs_read(ms_io_mnt_t *mnt, ms_io_file_t *file, ms_ptr_t buf, ms_size_t len)
@@ -658,7 +647,7 @@ static int __ms_fatfs_closedir(ms_io_mnt_t *mnt, ms_io_file_t *file)
     int ret;
 
     fresult = f_closedir(fatfs_dir);
-    if (fresult != FR_OK) {
+    if ((fresult != FR_OK) && !mnt->umount_req) {
         ms_thread_set_errno(__ms_fatfs_result_to_errno(fresult));
         ret = -1;
     } else {
@@ -668,16 +657,6 @@ static int __ms_fatfs_closedir(ms_io_mnt_t *mnt, ms_io_file_t *file)
     }
 
     return ret;
-}
-
-static int __ms_fatfs_destroydir(ms_io_mnt_t *mnt, ms_io_file_t *file)
-{
-    DIR *fatfs_dir = file->ctx;
-
-    (void)ms_kfree(fatfs_dir);
-    file->ctx = MS_NULL;
-
-    return 0;
 }
 
 static int __ms_fatfs_readdir_r(ms_io_mnt_t *mnt, ms_io_file_t *file, ms_dirent_t *entry, ms_dirent_t **result)
@@ -802,7 +781,6 @@ static ms_io_fs_ops_t ms_io_fatfs_ops = {
 
         .open       = __ms_fatfs_open,
         .close      = __ms_fatfs_close,
-        .destroy    = __ms_fatfs_destroy,
         .read       = __ms_fatfs_read,
         .write      = __ms_fatfs_write,
         .ioctl      = MS_NULL,
@@ -817,7 +795,6 @@ static ms_io_fs_ops_t ms_io_fatfs_ops = {
 
         .opendir    = __ms_fatfs_opendir,
         .closedir   = __ms_fatfs_closedir,
-        .destroydir = __ms_fatfs_destroydir,
         .readdir_r  = __ms_fatfs_readdir_r,
         .rewinddir  = __ms_fatfs_rewinddir,
         .seekdir    = __ms_fatfs_seekdir,
