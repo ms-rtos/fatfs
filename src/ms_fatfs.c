@@ -409,6 +409,7 @@ static int __ms_fatfs_ftruncate(ms_io_mnt_t *mnt, ms_io_file_t *file, ms_off_t l
             ret = -1;
 
         } else {
+            old_off = MS_MIN(len, old_off);
             fresult = f_lseek(fatfs_file, old_off);
             if (fresult != FR_OK) {
                 ms_thread_set_errno(__ms_fatfs_result_to_errno(fresult));
