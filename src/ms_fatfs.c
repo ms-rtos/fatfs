@@ -677,7 +677,7 @@ static int __ms_fatfs_readdir_r(ms_io_mnt_t *mnt, ms_io_file_t *file, ms_dirent_
                 *result = entry;
             }
 
-            ret = 1;
+            ret = 0;
 
         } else {
             if (result != MS_NULL) {
